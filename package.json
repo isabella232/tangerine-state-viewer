@@ -1,0 +1,44 @@
+{
+    "name": "tangerine-state-editor",
+    "displayName": "Tangerine state editor",
+    "description": "View and edit the state of tangerine apps",
+    "version": "0.0.1",
+    "publisher": "Atlassian",
+    "engines": {
+        "vscode": "^1.28.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onView:state-tree-view",
+        "onLanguage:javascript",
+        "onLanguage:typescript"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "views": {
+            "explorer": [
+                {
+                    "id": "state-tree-view",
+                    "name": "Tangerine State"
+                }
+                
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.21",
+        "tslint": "^5.8.0",
+        "@types/node": "^8.10.25",
+        "@types/mocha": "^2.2.42"
+    }
+}
