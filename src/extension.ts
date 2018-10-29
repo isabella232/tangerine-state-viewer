@@ -34,12 +34,11 @@ export function activate(context: vscode.ExtensionContext) {
         return vscode.window.showInputBox({
             placeHolder: "Enter space-separated name for the new action e.g: \'update items\'",
         }).then((name: string | undefined) => {
-            console.log(name);
-
             if(!name) {
                 return Promise.reject();
             }
             
+            // todo get action context
             insertText(actionGenerator('ui', name));
         });
     });
@@ -47,7 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     let stateTreeView = vscode.window.createTreeView('state-tree-view', {treeDataProvider: stateTreeProvider});
     stateTreeView.onDidChangeSelection((e: vscode.TreeViewSelectionChangeEvent<Entry>) => {
-        console.log(e);
         const jump = e.selection[0].jump;
         if(jump) {
             vscode.workspace.openTextDocument(`${jump.file}`).then(document => {
@@ -56,11 +54,10 @@ export function activate(context: vscode.ExtensionContext) {
                     editor.selection = new vscode.Selection(position, position);
                     editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter);
                     vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
-                })
-            })
+                });
+            });
         }
-        
-    })
+    });
 
 
     context.subscriptions.push(stateTreeView);

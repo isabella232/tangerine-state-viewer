@@ -31,7 +31,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         vscode.window.onDidChangeActiveTextEditor(this.onUpdateEditor, this, subscriptions);
         
         // manually run update for first run
-        this.onUpdateEditor(vscode.window.activeTextEditor);
+        this.onUpdateEditor();
 
         this._disposable = vscode.Disposable.from(...subscriptions);
     }
@@ -40,7 +40,8 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         this._disposable.dispose();
     }
 
-    async onUpdateEditor(editor: vscode.TextEditor | undefined) {
+    async onUpdateEditor() {
+        const editor = vscode.window.activeTextEditor;
         if(!editor) {
             return;
         }
@@ -50,9 +51,13 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
             if(!this.appMap[appPath]) {
                 this.appMap[appPath] = {
                     path: appPath,
-                    entries: []
+                    entries: [{
+                        name: "Actions",
+                        children: [],
+                    }]
                 };
-            }
+            } 
+
             this.currentAppPath = appPath;
         } catch(err) {
             // no app found, reset to empty
@@ -62,7 +67,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         
         // update the state!
         const state = new StateParser(this.currentAppPath);
-        this.appMap[this.currentAppPath].entries.push(await state.getActionEntries());
+        this.appMap[this.currentAppPath].entries[0] = await state.getActionEntries();
         this.onDidChangeTreeDataEvent.fire();
         console.log("Finished updating app state!");
     }
@@ -87,21 +92,22 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         });
     }
 
-    async getChildren(element?: Entry): Promise<Entry[]> {
-        
+    getChildren(element?: Entry): vscode.ProviderResult<Entry[]> {
         // root element, return app root
         if(!element && this.currentAppPath && this.appMap[this.currentAppPath]) {
-            console.log(this.currentAppPath);
             return this.appMap[this.currentAppPath].entries;
-        } else if(element && element.children) {
-            console.log(element);
-            return element.children;
+        } else if(element && element.children && this.currentAppPath) {
+            switch(element.name) {
+                case 'Actions':
+                return this.appMap[this.currentAppPath].entries[0].children;
+                default:
+                return [];
+            }
         }
         return [];
     }
 
     getTreeItem(element: Entry): vscode.TreeItem {
-        console.log(element);
         return new vscode.TreeItem(element.name, element.children && element.children.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     }
 }
