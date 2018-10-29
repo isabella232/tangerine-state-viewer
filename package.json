@@ -58,5 +58,9 @@
         "tslint": "^5.8.0",
         "@types/node": "^8.10.25",
         "@types/mocha": "^2.2.42"
+    },
+    "dependencies": {
+        "@types/walk": "^2.3.0",
+        "walk": "^2.3.14"
     }
 }

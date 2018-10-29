@@ -29,6 +29,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         this.currentAppPath = undefined;
 
         vscode.window.onDidChangeActiveTextEditor(this.onUpdateEditor, this, subscriptions);
+        vscode.workspace.onDidSaveTextDocument(this.onUpdateEditor, this);
         
         // manually run update for first run
         this.onUpdateEditor();
@@ -51,10 +52,16 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
             if(!this.appMap[appPath]) {
                 this.appMap[appPath] = {
                     path: appPath,
-                    entries: [{
-                        name: "Actions",
-                        children: [],
-                    }]
+                    entries: [
+                        {
+                            name: "Actions",
+                            children: [],
+                        },
+                        {
+                            name: "Selectors",
+                            children: [],
+                        }
+                    ]
                 };
             } 
 
@@ -67,7 +74,9 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         
         // update the state!
         const state = new StateParser(this.currentAppPath);
-        this.appMap[this.currentAppPath].entries[0] = await state.getActionEntries();
+        this.appMap[this.currentAppPath].entries[0] = await state.getFunctionsForType('actions');
+        this.appMap[this.currentAppPath].entries[1] = await state.getFunctionsForType('selectors');
+        console.log(this.appMap[this.currentAppPath]);
         this.onDidChangeTreeDataEvent.fire();
         console.log("Finished updating app state!");
     }
@@ -97,12 +106,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         if(!element && this.currentAppPath && this.appMap[this.currentAppPath]) {
             return this.appMap[this.currentAppPath].entries;
         } else if(element && element.children && this.currentAppPath) {
-            switch(element.name) {
-                case 'Actions':
-                return this.appMap[this.currentAppPath].entries[0].children;
-                default:
-                return [];
-            }
+            return element.children;
         }
         return [];
     }
