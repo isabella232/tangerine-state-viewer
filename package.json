@@ -17,13 +17,31 @@
     ],
     "main": "./out/extension",
     "contributes": {
+        "commands": {
+            "command": "tangerine.createAction",
+            "title": "Create a new action+types given the name"
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "state-tree-explorer",
+                    "title": "Tangerine State Editor",
+                    "icon": "assets/icon.svg"
+                }
+            ]
+        },
         "views": {
             "explorer": [
                 {
                     "id": "state-tree-view",
                     "name": "Tangerine State"
                 }
-                
+            ],
+            "state-tree-explorer": [
+                {
+                    "id": "state-tree-view",
+                    "name": "Tangerine State"
+                }
             ]
         }
     },
