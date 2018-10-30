@@ -46,6 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let stateTreeView = vscode.window.createTreeView('state-tree-view', {treeDataProvider: stateTreeProvider});
     stateTreeView.onDidChangeSelection((e: vscode.TreeViewSelectionChangeEvent<Entry>) => {
+        console.log(e);
         const jump = e.selection[0].jump;
         if(jump) {
             vscode.workspace.openTextDocument(`${jump.file}`).then(document => {

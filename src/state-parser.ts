@@ -4,27 +4,42 @@ import * as walk from 'walk';
 import {Entry} from './types';
 import { resolve } from 'path';
 
+export const Types = {
+    actions: 'actions',
+    reducers: 'reducers',
+    selectors: 'selectors',
+    unknown: 'unknown'
+};
+
+export type StateType = 'actions' | 'reducers' | 'selectors' | 'unknown';
+
 export interface JumpDefinition {
     name: string;
     file: string;
     line: number;
+    type: StateType;
+    context: string | undefined;
 }
 
 export class StateParser {
     private appPath: string | void;
+    private parsePromise: Promise<JumpDefinition[]>;
 
     constructor(path: string | void) {
         this.appPath = path;
+        if(path) {
+            this.parsePromise = this.parse(`${path}/state`, this.getExportedFunctions);
+        } else {
+            this.parsePromise = Promise.reject();
+        }
+        
     }
 
-    async parse(type: string, stateDir: string, parser: (file: string) => Promise<JumpDefinition[]>): Promise<JumpDefinition[]> {
+    async parse(stateDir: string, parser: (file: string) => Promise<JumpDefinition[]>): Promise<JumpDefinition[]> {
         return new Promise<JumpDefinition[]>((resolve, reject) => {
             if(stateDir) {
                 fs.readdir(stateDir, async (err, items) => {
-                    if(items.indexOf(type) > -1) {
-                        resolve(await this.parseDirectory(`${stateDir}/${type}`, parser));
-                    } 
-                    resolve(await this.parseDirectory(`${stateDir}`, parser, type));
+                    resolve(await this.parseDirectory(`${stateDir}`, parser));
                 });
             } else {
                 resolve([]);
@@ -36,10 +51,11 @@ export class StateParser {
     async parseDirectory(dir: string, parser: (file: string) => Promise<JumpDefinition[]>, type?: string): Promise<JumpDefinition[]> {
         return new Promise<JumpDefinition[]>((resolve, reject) => {
             const ret: JumpDefinition[] = [];
-            const walker = walk.walk(dir)
+            const walker = walk.walk(dir);
             
             walker.on('file', async (root, fileStats, next) => {
-                console.log(root)
+                console.log(root);
+                
                 if(type) {
                     if(fileStats.name === `${type}.js`) {
                         ret.push(...await parser(`${root}/${fileStats.name}`));
@@ -65,6 +81,30 @@ export class StateParser {
             readLine.createInterface({
                 input: fs.createReadStream(file)
             }).on('line', line => {
+                let splitFilename = file.split('/')
+                splitFilename = splitFilename.slice(splitFilename.indexOf('state')+1);
+                console.log(splitFilename);
+
+                // try and guess context/type based on structure/name
+                let context = splitFilename.length > 1 ? splitFilename.slice(1, splitFilename.length-1).join('.') : undefined;
+                let type: StateType = 'unknown';
+                switch(splitFilename[0]) {
+                    case 'selectors':
+                    case 'selectors.js':
+                    type = 'selectors';
+                    break;
+
+                    case 'reducers':
+                    case 'reducers.js':
+                    type = 'reducers';
+                    break;
+
+                    case 'actions':
+                    case 'actions.js':
+                    type = 'actions';
+                    break;
+                }
+
                 const match = line.match(/export const ([a-z][A-Za-z]+)/gm);
                 if(match && match.length === 1) {
                     const name = match[0].split(/[ ,]+/)[2];
@@ -73,10 +113,13 @@ export class StateParser {
                         name,
                         file: file,
                         line: lineNum,
+                        type,
+                        context,
                     });
                 }
                 lineNum = lineNum + 1;
             }).on('close', () => {
+                console.log(ret);
                 resolve(ret);
             });
         });
@@ -88,14 +131,34 @@ export class StateParser {
             return {name: type[0].toUpperCase() + type.substr(1)};
         }
 
-        const functions = await this.parse(type, `${this.appPath}/state`, this.getExportedFunctions);
-        console.log(functions);
+        const jumps: JumpDefinition[] = await this.parsePromise;
+        const entries: {[context: string]: Entry[]} = {unknown: []};
+        
+
+        jumps.filter(j => j.type === type).forEach((jump) => {
+            if(!jump.context) {
+                entries.unknown.push({name: jump.name, jump});
+            } else if(entries[jump.context]) {
+                entries[jump.context].push({name: jump.name, jump});
+            } else {
+                entries[jump.context] = [{name: jump.name, jump}];
+            }
+        });
+        console.log(entries);
+
+        const entriesWithContext: Entry[] = Object.keys(entries).filter(c => c !== 'unknown').map(name => {
+            const children = entries[name];
+            return {
+                name,
+                children
+            };
+        });
+
+        console.log(entriesWithContext);
+        
         return {
             name: type[0].toUpperCase() + type.substr(1),
-            children: functions.map((action: JumpDefinition): Entry => ({
-                name: action.name,
-                jump: action,
-            }))
+            children: [...entries.unknown, ...entriesWithContext]
         };
     }
 }
