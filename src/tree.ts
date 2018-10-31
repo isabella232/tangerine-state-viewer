@@ -60,6 +60,10 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
                         {
                             name: "Selectors",
                             children: [],
+                        },
+                        {
+                            name: "Reducers",
+                            children: [],
                         }
                     ]
                 };
@@ -77,6 +81,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         this.stateParser = new StateParser(this.currentAppPath);
         this.appMap[this.currentAppPath].entries[0] = await this.stateParser.getFunctionsForType('actions', filter);
         this.appMap[this.currentAppPath].entries[1] = await this.stateParser.getFunctionsForType('selectors', filter);
+        this.appMap[this.currentAppPath].entries[2] = await this.stateParser.getFunctionsForType('reducers', filter);
         console.log(this.appMap[this.currentAppPath]);
         this.onDidChangeTreeDataEvent.fire();
         console.log("Finished updating app state!");
