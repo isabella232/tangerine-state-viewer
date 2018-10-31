@@ -20,11 +20,15 @@
         "commands": [
             {
                 "command": "tangerine.createAction",
-                "title": "Create a new action+types given the name"
+                "title": "Tangerine: Create an action"
+            },
+            {
+                "command": "tangerine.jumpTo",
+                "title": "Tangerine: Jump to closest named item"
             },
             {
                 "command": "tangerine.search",
-                "title": "Filter tangerine items",
+                "title": "Tangerine: Search for items",
                 "icon": {
                     "light": "assets/icon.svg",
                     "dark": "assets/icon.svg"

@@ -12,7 +12,7 @@ export const Types = {
 
 export class StateParser {
     private appPath: string | void;
-    private parsePromise: Promise<JumpDefinition[]>;
+    public parsePromise: Promise<JumpDefinition[]>;
 
     constructor(path: string | void) {
         this.appPath = path;

@@ -4,7 +4,6 @@ import * as fs from 'fs';
 import { Entry, JumpDefinition } from './types';
 import { StateParser } from './state-parser';
 
-
 interface AppMapEntry {
     path: string;
     entries: Entry[];
@@ -19,6 +18,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
     private _disposable: vscode.Disposable;
     private appMap: AppMap;
     private currentAppPath: string | void;
+    private stateParser?: StateParser;
 
     public readonly onDidChangeTreeDataEvent =  new vscode.EventEmitter<Entry | null> ();
     public readonly onDidChangeTreeData: vscode.Event<Entry | null> = this.onDidChangeTreeDataEvent.event;
@@ -72,10 +72,11 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
             return;
         }
         
-        // update the state!
-        const state = new StateParser(this.currentAppPath);
-        this.appMap[this.currentAppPath].entries[0] = await state.getFunctionsForType('actions', filter);
-        this.appMap[this.currentAppPath].entries[1] = await state.getFunctionsForType('selectors', filter);
+        // whenever we want to update the state, reparse the tree
+        // TODO maybe optimize this slightly, memoize the files?
+        this.stateParser = new StateParser(this.currentAppPath);
+        this.appMap[this.currentAppPath].entries[0] = await this.stateParser.getFunctionsForType('actions', filter);
+        this.appMap[this.currentAppPath].entries[1] = await this.stateParser.getFunctionsForType('selectors', filter);
         console.log(this.appMap[this.currentAppPath]);
         this.onDidChangeTreeDataEvent.fire();
         console.log("Finished updating app state!");
@@ -112,6 +113,17 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
     }
 
     getTreeItem(element: Entry): vscode.TreeItem {
-        return new vscode.TreeItem(element.name, element.children && element.children.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
+        let collapsedState =  vscode.TreeItemCollapsibleState.None;
+        if(element.children) {
+            collapsedState = vscode.TreeItemCollapsibleState.Collapsed;
+        }
+        return new vscode.TreeItem(element.name, collapsedState);
+    }
+
+    async getRawJumps(): Promise<JumpDefinition[]> {
+        if(this.stateParser) {
+            return this.stateParser.parsePromise;
+        }
+        return Promise.reject();
     }
 }
