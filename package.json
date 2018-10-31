@@ -17,10 +17,20 @@
     ],
     "main": "./out/extension",
     "contributes": {
-        "commands": {
-            "command": "tangerine.createAction",
-            "title": "Create a new action+types given the name"
-        },
+        "commands": [
+            {
+                "command": "tangerine.createAction",
+                "title": "Create a new action+types given the name"
+            },
+            {
+                "command": "tangerine.search",
+                "title": "Filter tangerine items",
+                "icon": {
+                    "light": "assets/icon.svg",
+                    "dark": "assets/icon.svg"
+                }
+            }
+        ],
         "viewsContainers": {
             "activitybar": [
                 {
@@ -43,6 +53,15 @@
                     "name": "Tangerine State"
                 }
             ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "tangerine.search",
+                    "when": "view == state-tree-view",
+                    "group": "navigation"
+                }
+            ]
         }
     },
     "scripts": {
@@ -61,6 +80,7 @@
     },
     "dependencies": {
         "@types/walk": "^2.3.0",
+        "fuse.js": "^3.3.0",
         "walk": "^2.3.14"
     }
 }

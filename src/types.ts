@@ -1,4 +1,13 @@
-import { JumpDefinition } from "./state-parser";
+
+export type StateType = 'actions' | 'reducers' | 'selectors' | 'unknown';
+
+export interface JumpDefinition {
+    name: string;
+    file: string;
+    line: number;
+    type: StateType;
+    context: string | undefined;
+}
 
 export interface Entry {
     name: string;

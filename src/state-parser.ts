@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import * as readLine from 'readline';
 import * as walk from 'walk';
-import {Entry} from './types';
-import { resolve } from 'path';
+import {Entry, JumpDefinition, StateType} from './types';
 
 export const Types = {
     actions: 'actions',
@@ -10,16 +9,6 @@ export const Types = {
     selectors: 'selectors',
     unknown: 'unknown'
 };
-
-export type StateType = 'actions' | 'reducers' | 'selectors' | 'unknown';
-
-export interface JumpDefinition {
-    name: string;
-    file: string;
-    line: number;
-    type: StateType;
-    context: string | undefined;
-}
 
 export class StateParser {
     private appPath: string | void;
@@ -54,8 +43,6 @@ export class StateParser {
             const walker = walk.walk(dir);
             
             walker.on('file', async (root, fileStats, next) => {
-                console.log(root);
-                
                 if(type) {
                     if(fileStats.name === `${type}.js`) {
                         ret.push(...await parser(`${root}/${fileStats.name}`));
@@ -63,7 +50,6 @@ export class StateParser {
                 } else {
                     ret.push(...await parser(`${root}/${fileStats.name}`));
                 }
-                
                 next();
             });
             
@@ -83,7 +69,6 @@ export class StateParser {
             }).on('line', line => {
                 let splitFilename = file.split('/')
                 splitFilename = splitFilename.slice(splitFilename.indexOf('state')+1);
-                console.log(splitFilename);
 
                 // try and guess context/type based on structure/name
                 let context = splitFilename.length > 1 ? splitFilename.slice(1, splitFilename.length-1).join('.') : undefined;
@@ -119,22 +104,21 @@ export class StateParser {
                 }
                 lineNum = lineNum + 1;
             }).on('close', () => {
-                console.log(ret);
                 resolve(ret);
             });
         });
     }
 
     // get the actions as a nested entry thing
-    async getFunctionsForType(type: string): Promise<Entry> {
+    async getFunctionsForType(type: string, search?: (entry: JumpDefinition[]) => JumpDefinition[]): Promise<Entry> {
         if(!this.appPath) {
             return {name: type[0].toUpperCase() + type.substr(1)};
         }
 
-        const jumps: JumpDefinition[] = await this.parsePromise;
+        const jumps: JumpDefinition[] = search ? search(await this.parsePromise) : await this.parsePromise;
         const entries: {[context: string]: Entry[]} = {unknown: []};
         
-
+        // groupify the entries so we can show them in the treeview nicely
         jumps.filter(j => j.type === type).forEach((jump) => {
             if(!jump.context) {
                 entries.unknown.push({name: jump.name, jump});
@@ -144,7 +128,6 @@ export class StateParser {
                 entries[jump.context] = [{name: jump.name, jump}];
             }
         });
-        console.log(entries);
 
         const entriesWithContext: Entry[] = Object.keys(entries).filter(c => c !== 'unknown').map(name => {
             const children = entries[name];

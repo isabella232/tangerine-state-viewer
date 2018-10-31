@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { Entry } from './types';
+import { Entry, JumpDefinition } from './types';
 import { StateParser } from './state-parser';
 
 
@@ -28,8 +28,8 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         this.appMap = {};
         this.currentAppPath = undefined;
 
-        vscode.window.onDidChangeActiveTextEditor(this.onUpdateEditor, this, subscriptions);
-        vscode.workspace.onDidSaveTextDocument(this.onUpdateEditor, this);
+        vscode.window.onDidChangeActiveTextEditor(() => this.onUpdateEditor(), this, subscriptions);
+        vscode.workspace.onDidSaveTextDocument(() => this.onUpdateEditor(), this);
         
         // manually run update for first run
         this.onUpdateEditor();
@@ -41,7 +41,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         this._disposable.dispose();
     }
 
-    async onUpdateEditor() {
+    async onUpdateEditor(filter?: (entry: JumpDefinition[]) => JumpDefinition[]) {
         const editor = vscode.window.activeTextEditor;
         if(!editor) {
             return;
@@ -74,8 +74,8 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         
         // update the state!
         const state = new StateParser(this.currentAppPath);
-        this.appMap[this.currentAppPath].entries[0] = await state.getFunctionsForType('actions');
-        this.appMap[this.currentAppPath].entries[1] = await state.getFunctionsForType('selectors');
+        this.appMap[this.currentAppPath].entries[0] = await state.getFunctionsForType('actions', filter);
+        this.appMap[this.currentAppPath].entries[1] = await state.getFunctionsForType('selectors', filter);
         console.log(this.appMap[this.currentAppPath]);
         this.onDidChangeTreeDataEvent.fire();
         console.log("Finished updating app state!");
