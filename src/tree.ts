@@ -17,7 +17,7 @@ interface AppMap {
 export class StateProvider implements vscode.TreeDataProvider<Entry> {
     private _disposable: vscode.Disposable;
     private appMap: AppMap;
-    private currentAppPath: string | void;
+    private currentAppPath: string;
     private stateParser?: StateParser;
     private filteringMode: boolean;
 
@@ -27,10 +27,21 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
     constructor() {
         let subscriptions: vscode.Disposable[] = [];
         this.appMap = {};
-        this.currentAppPath = undefined;
+        this.currentAppPath = '';
         this.filteringMode = false;
 
-        vscode.window.onDidChangeActiveTextEditor(() => this.onUpdateEditor(), this, subscriptions);
+        vscode.window.onDidChangeActiveTextEditor((editor?: vscode.TextEditor) => {
+            if(editor && editor.document.fileName.startsWith(this.currentAppPath)) {
+                return;
+            }
+
+            // kill filtering since we are changing apps
+            this.setIsInFilteringMode(false);
+            vscode.commands.executeCommand('setContext', 'tangerine-state-filtering', false);
+            
+            this.onUpdateEditor();
+        }
+            , this, subscriptions);
         vscode.workspace.onDidSaveTextDocument(() => this.onUpdateEditor(), this);
         
         // manually run update for first run
@@ -80,7 +91,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
             this.currentAppPath = appPath;
         } catch(err) {
             // no app found, reset to empty
-            this.currentAppPath = undefined;
+            this.currentAppPath = '';
             return;
         }
         
