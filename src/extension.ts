@@ -49,22 +49,24 @@ function defineCommands(context: vscode.ExtensionContext) {
             if(splitfile.indexOf('state')+2 > splitfile.length) {
                 return;
             }
+            
             context = splitfile.slice(splitfile.indexOf('state')+2, splitfile.length-1).join('.');
             insertText(actionGenerator(context, actionName));
         } else {
             const actionDef = actionGenerator(context, actionName);
             // create the context folder
-            const actiondir = splitfile.slice(0, splitfile.indexOf('state')+1).join('/') + '/actions/' + context.replace('.','/');
+            const actiondir = splitfile.slice(0, splitfile.indexOf('state')+1).join('/') + '/actions/' + context.split('.').join('/');
             
             mkdirp(actiondir, (err) => {
                 const filename = actiondir+'/index.js';
+
                 if(!err) {
-                    if(existsSync(actiondir)) {
+                    if(existsSync(filename)) {
                         appendFile(filename, actionDef, () => {});
                     } else {
-                        writeFile(filename, "//@flow"+actionDef, ()=>{});
+                        writeFile(filename, `//@flow\n${actionDef}`, ()=>{});
                     }
-                    
+                    vscode.workspace.openTextDocument(filename).then(document => vscode.window.showTextDocument(document));
                 }
             });
         }

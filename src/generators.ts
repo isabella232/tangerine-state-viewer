@@ -5,7 +5,6 @@ export function actionGenerator(context: string, name: string): string {
     const upperCamelCase = name.replace(/(?:^\w|[A-Z]|\b\w)/g, letter => letter.toUpperCase()).replace(/\s+/g, '');
     
     return `
-
 // ${allcaps}
 export const ${typeName}: 'state.actions.${context}.${typeName}' = 'state.actions.${context}.${typeName}';
 
