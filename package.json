@@ -90,8 +90,10 @@
         "@types/mocha": "^2.2.42"
     },
     "dependencies": {
+        "@types/mkdirp": "^0.5.2",
         "@types/walk": "^2.3.0",
         "fuse.js": "^3.3.0",
+        "mkdirp": "^0.5.1",
         "walk": "^2.3.14"
     }
 }

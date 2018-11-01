@@ -6,6 +6,8 @@ import {StateProvider} from './tree';
 import { actionGenerator } from './generators';
 import { Entry, JumpDefinition } from './types';
 import * as Fuse from 'fuse.js';
+import * as mkdirp from 'mkdirp';
+import { fstat, writeFile, existsSync, appendFile } from 'fs';
 
 
 function insertText(text: string) {
@@ -30,14 +32,42 @@ function insertText(text: string) {
 function defineCommands(context: vscode.ExtensionContext) {
     let createActionDisposable = vscode.commands.registerTextEditorCommand("tangerine.createAction", () => 
     vscode.window.showInputBox({
-        placeHolder: "Enter space-separated name for the new action e.g: \'update items\'",
+        placeHolder: "Enter name for new action with context e.g: \'ui.page.setLoading\'",
     }).then((name: string | undefined) => {
-        if(!name) {
+        if(!name || !vscode.window.activeTextEditor) {
             return Promise.reject();
         }
         
-        // todo get action context
-        insertText(actionGenerator('ui', name));
+        const input = name.split('.');
+        let context = input.slice(0, input.length-1).join('.');
+        const actionName = input[input.length-1];
+        
+        const splitfile = vscode.window.activeTextEditor.document.fileName.split('/');
+        if(context == '' && vscode.window.activeTextEditor && vscode.window.activeTextEditor) {
+
+            // no context given, insert at point
+            if(splitfile.indexOf('state')+2 > splitfile.length) {
+                return;
+            }
+            context = splitfile.slice(splitfile.indexOf('state')+2, splitfile.length-1).join('.');
+            insertText(actionGenerator(context, actionName));
+        } else {
+            const actionDef = actionGenerator(context, actionName);
+            // create the context folder
+            const actiondir = splitfile.slice(0, splitfile.indexOf('state')+1).join('/') + '/actions/' + context.replace('.','/');
+            
+            mkdirp(actiondir, (err) => {
+                const filename = actiondir+'/index.js';
+                if(!err) {
+                    if(existsSync(actiondir)) {
+                        appendFile(filename, actionDef, () => {});
+                    } else {
+                        writeFile(filename, "//@flow"+actionDef, ()=>{});
+                    }
+                    
+                }
+            });
+        }
     }));
     context.subscriptions.push(createActionDisposable);
 }
