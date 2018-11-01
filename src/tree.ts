@@ -19,6 +19,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
     private appMap: AppMap;
     private currentAppPath: string | void;
     private stateParser?: StateParser;
+    private filteringMode: boolean;
 
     public readonly onDidChangeTreeDataEvent =  new vscode.EventEmitter<Entry | null> ();
     public readonly onDidChangeTreeData: vscode.Event<Entry | null> = this.onDidChangeTreeDataEvent.event;
@@ -27,6 +28,7 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
         let subscriptions: vscode.Disposable[] = [];
         this.appMap = {};
         this.currentAppPath = undefined;
+        this.filteringMode = false;
 
         vscode.window.onDidChangeActiveTextEditor(() => this.onUpdateEditor(), this, subscriptions);
         vscode.workspace.onDidSaveTextDocument(() => this.onUpdateEditor(), this);
@@ -42,6 +44,12 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
     }
 
     async onUpdateEditor(filter?: (entry: JumpDefinition[]) => JumpDefinition[]) {
+        
+        if(this.filteringMode) {
+            return;
+        }
+
+
         const editor = vscode.window.activeTextEditor;
         if(!editor) {
             return;
@@ -130,5 +138,9 @@ export class StateProvider implements vscode.TreeDataProvider<Entry> {
             return this.stateParser.parsePromise;
         }
         return Promise.reject();
+    }
+
+    setIsInFilteringMode(filtering: boolean) {
+        this.filteringMode = filtering;
     }
 }

@@ -25,31 +25,12 @@ export class StateParser {
     }
 
     async parse(stateDir: string, parser: (file: string) => Promise<JumpDefinition[]>): Promise<JumpDefinition[]> {
-        return new Promise<JumpDefinition[]>((resolve, reject) => {
-            if(stateDir) {
-                fs.readdir(stateDir, async (err, items) => {
-                    resolve(await this.parseDirectory(`${stateDir}`, parser));
-                });
-            } else {
-                resolve([]);
-            }
-            
-        });
-    }
-
-    async parseDirectory(dir: string, parser: (file: string) => Promise<JumpDefinition[]>, type?: string): Promise<JumpDefinition[]> {
-        return new Promise<JumpDefinition[]>((resolve, reject) => {
+        return new Promise<JumpDefinition[]>(async (resolve, reject) => {
             const ret: JumpDefinition[] = [];
-            const walker = walk.walk(dir);
-            
+            const walker = walk.walk(stateDir);
+
             walker.on('file', async (root, fileStats, next) => {
-                if(type) {
-                    if(fileStats.name === `${type}.js`) {
-                        ret.push(...await parser(`${root}/${fileStats.name}`));
-                    }
-                } else {
-                    ret.push(...await parser(`${root}/${fileStats.name}`));
-                }
+                ret.push(...await parser(`${root}/${fileStats.name}`));
                 next();
             });
             
@@ -63,37 +44,33 @@ export class StateParser {
         let lineNum = 0;
         let ret: JumpDefinition[] = [];
 
+        console.log(`Parsing: ${file}`);
+
         return new Promise((resolve, reject) => {
             readLine.createInterface({
                 input: fs.createReadStream(file)
             }).on('line', line => {
-                let splitFilename = file.split('/')
-                splitFilename = splitFilename.slice(splitFilename.indexOf('state')+1);
-
-                // try and guess context/type based on structure/name
-                let context = splitFilename.length > 1 ? splitFilename.slice(1, splitFilename.length-1).join('.') : undefined;
-                let type: StateType = 'unknown';
-                switch(splitFilename[0]) {
-                    case 'selectors':
-                    case 'selectors.js':
-                    type = 'selectors';
-                    break;
-
-                    case 'reducers':
-                    case 'reducers.js':
-                    type = 'reducers';
-                    break;
-
-                    case 'actions':
-                    case 'actions.js':
-                    type = 'actions';
-                    break;
-                }
-
                 const match = line.match(/export const ([a-z][A-Za-z]+)/gm);
                 if(match && match.length === 1) {
+                    let splitFilename = file.split('/')
+                    let filename = splitFilename[splitFilename.length-1];
+                    splitFilename = splitFilename.slice(splitFilename.indexOf('state')+1);
+
+                    // try and guess context/type based on structure/name
+                    let context = splitFilename.length > 1 ? splitFilename.slice(1, splitFilename.length-1).join('.') : undefined;
+                    
+                    let type: StateType = 'unknown';
+
+                    if(splitFilename[0].startsWith('selector') || filename.startsWith('selector')) {
+                        type = "selectors";
+                    } else if(splitFilename[0].startsWith('reducer') || filename.startsWith('reducer')) {
+                        type = "reducers";
+                    } else if(splitFilename[0].startsWith('action') || filename.startsWith('action')) {
+                        type = "actions";
+                    }
+
                     const name = match[0].split(/[ ,]+/)[2];
-                    console.log(`Found function with name: ${name}`);
+                    console.log(`Found function with name: ${name}, likely type: ${type}`);
                     ret.push({
                         name,
                         file: file,

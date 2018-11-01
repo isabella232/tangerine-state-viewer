@@ -62,7 +62,9 @@ function searchJumps(jumps: JumpDefinition[], name: string, threshold = 0.3): Ju
         maxPatternLength: 32,
         minMatchCharLength: 1,
         keys: [
-            'name'
+            'name',
+            'context',
+            'type'
         ]
     };
     const fuse = new Fuse(jumps, options);
@@ -84,8 +86,11 @@ function setupTreeView(context: vscode.ExtensionContext) {
         vscode.window.showInputBox({placeHolder: 'Tangerine item to search for'})
         .then((name?: string) => {
             if(name) {
+                stateTreeProvider.setIsInFilteringMode(false);
+                vscode.commands.executeCommand('setContext', 'tangerine-state-filtering', true);
                 vscode.commands.executeCommand('workbench.view.extension.state-tree-explorer');
                 stateTreeProvider.onUpdateEditor((jumps) => searchJumps(jumps, name));
+                stateTreeProvider.setIsInFilteringMode(true);
             }
         }
     ));
@@ -116,7 +121,13 @@ function setupTreeView(context: vscode.ExtensionContext) {
         } else {
             searchAndJump(selectedText);
         }
-    })
+    });
+
+    vscode.commands.registerCommand('tangerine.clearFilter', () => {
+        vscode.commands.executeCommand('setContext', 'tangerine-state-filtering', false);
+        stateTreeProvider.setIsInFilteringMode(false);
+        stateTreeProvider.onUpdateEditor();
+    });
 }
 
 // this method is called when your extension is activated

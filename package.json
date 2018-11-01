@@ -30,8 +30,16 @@
                 "command": "tangerine.search",
                 "title": "Tangerine: Search for items",
                 "icon": {
-                    "light": "assets/icon.svg",
-                    "dark": "assets/icon.svg"
+                    "light": "assets/filter.svg",
+                    "dark": "assets/filter.svg"
+                }
+            },
+            {
+                "command": "tangerine.clearFilter",
+                "title": "Tangerine: Clear filtering mode and revert to app state view",
+                "icon": {
+                    "light": "assets/clear-filter.svg",
+                    "dark": "assets/clear-filter.svg"
                 }
             }
         ],
@@ -45,12 +53,6 @@
             ]
         },
         "views": {
-            "explorer": [
-                {
-                    "id": "state-tree-view",
-                    "name": "Tangerine State"
-                }
-            ],
             "state-tree-explorer": [
                 {
                     "id": "state-tree-view",
@@ -63,6 +65,11 @@
                 {
                     "command": "tangerine.search",
                     "when": "view == state-tree-view",
+                    "group": "navigation"
+                },
+                {
+                    "command": "tangerine.clearFilter",
+                    "when": "view == state-tree-view && tangerine-state-filtering == true",
                     "group": "navigation"
                 }
             ]
