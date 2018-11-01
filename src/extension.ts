@@ -7,7 +7,7 @@ import { actionGenerator } from './generators';
 import { Entry, JumpDefinition } from './types';
 import * as Fuse from 'fuse.js';
 import * as mkdirp from 'mkdirp';
-import { fstat, writeFile, existsSync, appendFile } from 'fs';
+import { writeFile, existsSync, appendFile } from 'fs';
 
 
 function insertText(text: string) {
@@ -49,7 +49,7 @@ function defineCommands(context: vscode.ExtensionContext) {
             if(splitfile.indexOf('state')+2 > splitfile.length) {
                 return;
             }
-            
+
             context = splitfile.slice(splitfile.indexOf('state')+2, splitfile.length-1).join('.');
             insertText(actionGenerator(context, actionName));
         } else {
