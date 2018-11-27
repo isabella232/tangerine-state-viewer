@@ -14,7 +14,7 @@ export type ${upperCamelCase} = {|
 |};
 
 export const ${camelCase} = (
-    payload: ${upperCamelCase},
+    payload: ${upperCamelCase}
 ): ${upperCamelCase} => ({
     type: ${typeName},
     payload,

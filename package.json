@@ -2,7 +2,7 @@
     "name": "tangerine-state-viewer",
     "displayName": "Tangerine viewer",
     "description": "View and edit the state of tangerine apps",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "Atlassian",
     "repository": "https://bitbucket.org/jh247247/vscode-tangerine",
     "engines": {
@@ -49,7 +49,7 @@
                 {
                     "id": "state-tree-explorer",
                     "title": "Tangerine State Editor",
-                    "icon": "assets/icon.png"
+                    "icon": "assets/icon.svg"
                 }
             ]
         },

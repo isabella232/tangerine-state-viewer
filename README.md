@@ -41,8 +41,9 @@ Initial release (2/11/18)
 - Innovation week project because tangerine is hard to conceptualize, especially if you're new to an app
 - Code quality: somewhere between spaghetti and shipit
 
-- Implements commands:
-    - `tangerine.createAction` -> Create an action
+### 0.0.2
+- Update generator to remove extra comma
+- Make it so the icon isn't a grey square
 
 
 
