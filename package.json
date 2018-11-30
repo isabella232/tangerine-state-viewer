@@ -4,7 +4,7 @@
     "description": "View and edit the state of tangerine apps",
     "version": "0.0.2",
     "publisher": "Atlassian",
-    "repository": "https://bitbucket.org/jh247247/vscode-tangerine",
+    "repository": "https://github.com/atlassian/vscode-extension-jira-frontend",
     "engines": {
         "vscode": "^1.28.0"
     },
