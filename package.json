@@ -2,9 +2,9 @@
     "name": "tangerine-state-viewer",
     "displayName": "Tangerine viewer",
     "description": "View and edit the state of tangerine apps",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "Atlassian",
-    "repository": "https://github.com/atlassian/vscode-extension-jira-frontend",
+    "repository": "https://github.com/atlassian/tangerine-state-viewer",
     "engines": {
         "vscode": "^1.28.0"
     },
